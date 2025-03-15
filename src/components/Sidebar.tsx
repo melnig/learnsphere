@@ -5,6 +5,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
+import { Link } from 'react-router-dom';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -24,42 +25,23 @@ export default function Sidebar({
   drawerWidth,
 }: SidebarProps) {
   const sidebarItems = [
-    {
-      text: 'Моє навчання',
-      icon: <MenuBookIcon />,
-      onClick: () => console.log('My Learning'),
-    },
-    {
-      text: 'Оцінювання',
-      icon: <AssessmentIcon />,
-      onClick: () => console.log('Assessment'),
-    },
-    {
-      text: 'Прогрес',
-      icon: <TrendingUpIcon />,
-      onClick: () => console.log('Progress'),
-    },
-    {
-      text: 'Курси',
-      icon: <SchoolIcon />,
-      onClick: () => console.log('Courses'),
-    },
-    {
-      text: 'Налаштування',
-      icon: <SettingsIcon />,
-      onClick: () => console.log('Settings'),
-    },
-    {
-      text: 'Профіль',
-      icon: <PersonIcon />,
-      onClick: () => console.log('Profile'),
-    },
+    { text: 'Моє навчання', icon: <MenuBookIcon />, path: '/my-learning' },
+    { text: 'Оцінювання', icon: <AssessmentIcon />, path: '/assessment' },
+    { text: 'Прогрес', icon: <TrendingUpIcon />, path: '/progress' },
+    { text: 'Курси', icon: <SchoolIcon />, path: '/courses' },
+    { text: 'Налаштування', icon: <SettingsIcon />, path: '/settings' },
+    { text: 'Профіль', icon: <PersonIcon />, path: '/profile' },
   ];
 
   const drawer = (
     <List>
       {sidebarItems.map((item) => (
-        <ListItemButton key={item.text} onClick={item.onClick}>
+        <ListItemButton
+          key={item.text}
+          component={Link}
+          to={item.path}
+          onClick={onClose}
+        >
           <ListItemIcon>{item.icon}</ListItemIcon>
           <ListItemText primary={item.text} />
         </ListItemButton>
@@ -69,7 +51,6 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Сайдбар для десктопу */}
       <Drawer
         variant="permanent"
         sx={{
@@ -86,7 +67,6 @@ export default function Sidebar({
       >
         {drawer}
       </Drawer>
-      {/* Сайдбар для мобільних */}
       <Drawer
         variant="temporary"
         open={mobileOpen}

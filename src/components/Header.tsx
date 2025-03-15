@@ -6,6 +6,7 @@ import {
   Box,
   Avatar,
 } from '@mui/material';
+import { Link } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import SchoolIcon from '@mui/icons-material/School';
 
@@ -37,17 +38,25 @@ export default function Header({ onSidebarToggle }: HeaderProps) {
           <SchoolIcon sx={{ mr: 1, fontSize: 32 }} />
           <Typography
             variant="h6"
-            sx={{ fontWeight: 'bold', letterSpacing: 1 }}
+            component={Link}
+            to="/"
+            sx={{
+              fontWeight: 'bold',
+              letterSpacing: 1,
+              color: 'white',
+              textDecoration: 'none',
+            }}
           >
             LearnSphere
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Avatar
+            component={Link}
+            to="/profile"
             src={user.avatarUrl}
             alt={user.name}
             sx={{ width: 32, height: 32, cursor: 'pointer' }}
-            onClick={() => console.log('Go to Profile')} // Пізніше додамо <Link>
           />
         </Box>
       </Toolbar>
