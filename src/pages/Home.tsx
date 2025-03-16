@@ -1,33 +1,60 @@
+import { useState, useEffect } from 'react';
 import {
+  Box,
   Typography,
   Grid,
   Card,
   CardContent,
-  CardActions,
-  Button,
+  CardMedia,
+  CardActionArea,
+  Breadcrumbs,
 } from '@mui/material';
+import { supabase } from '../supabase-config';
+import { Link } from 'react-router-dom';
+
+interface Course {
+  id: number;
+  title: string;
+  description: string;
+  image_url: string;
+}
 
 export default function Home() {
-  const courses = [
-    {
-      id: '1',
-      title: 'Introduction to JavaScript',
-      description: 'Learn the basics of JS programming.',
-    },
-    {
-      id: '2',
-      title: 'React Fundamentals',
-      description: 'Master React for modern web apps.',
-    },
-  ];
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const { data, error } = await supabase.from('courses').select('*');
+      if (error) {
+        setError(`Помилка завантаження курсів: ${error.message}`);
+      } else if (!data || data.length === 0) {
+        setError('Курси поки що недоступні.');
+      } else {
+        setCourses(data);
+      }
+      setLoading(false);
+    };
+    fetchCourses();
+  }, []);
+
+  if (loading) {
+    return <Typography>Завантаження...</Typography>;
+  }
+
+  if (error) {
+    return <Typography color="error">{error}</Typography>;
+  }
 
   return (
-    <>
+    <Box sx={{ p: 4 }}>
       <Typography
         variant="h4"
-        sx={{ mb: 3, fontWeight: 'bold', color: '#333' }}
+        gutterBottom
+        sx={{ fontWeight: 'bold', color: '#1976d2' }}
       >
-        Available Courses
+        Доступні курси
       </Typography>
       <Grid container spacing={3}>
         {courses.map((course) => (
@@ -37,37 +64,56 @@ export default function Home() {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  transform: 'scale(1.03)',
-                  boxShadow: '0 6px 12px rgba(0,0,0,0.15)',
-                },
+                boxShadow: 3,
+                '&:hover': { boxShadow: 6 },
               }}
             >
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 'medium', mb: 1 }}>
-                  {course.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {course.description}
-                </Typography>
-              </CardContent>
-              <CardActions sx={{ p: 2 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  href={`/course/${course.id}`}
-                >
-                  Details
-                </Button>
-              </CardActions>
+              <CardActionArea
+                component={Link}
+                to={`/course/${course.id}`}
+                sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
+              >
+                <CardMedia
+                  component="img"
+                  height="140"
+                  image={course.image_url}
+                  alt={course.title}
+                  onError={() =>
+                    console.log(`Failed to load image: ${course.image_url}`)
+                  }
+                />
+                <CardContent sx={{ textAlign: 'left', p: 2 }}>
+                  <Typography
+                    gutterBottom
+                    variant="h6"
+                    component="div"
+                    sx={{
+                      fontWeight: 'bold',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {course.title}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {course.description}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
             </Card>
           </Grid>
         ))}
       </Grid>
-    </>
+    </Box>
   );
 }

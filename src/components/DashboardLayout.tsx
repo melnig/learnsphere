@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase-config';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import DynamicBreadcrumbs from './DynamicBreadcrumbs';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -21,7 +22,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) {
-        navigate('/login'); // Неавторизованих на /login
+        navigate('/login');
       }
       setLoading(false);
     };
@@ -63,6 +64,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             width: { sm: `calc(100% - ${drawerWidth}px)` },
           }}
         >
+          <DynamicBreadcrumbs />
           {children}
         </Box>
       </Box>
