@@ -82,7 +82,7 @@ export default function Home() {
                     console.log(`Failed to load image: ${course.image_url}`)
                   }
                 />
-                <CardContent sx={{ textAlign: 'left', p: 2 }}>
+                <CardContent sx={{ textAlign: 'left', p: 2, flexGrow: 0 }}>
                   <Typography
                     gutterBottom
                     variant="h6"
