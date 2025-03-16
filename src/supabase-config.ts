@@ -1,7 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://phiyeinfnmmrtomtqila.supabase.co';
-const supabaseAnonKey =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBoaXllaW5mbm1tcnRvbXRxaWxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwNDc3MTAsImV4cCI6MjA1NzYyMzcxMH0.HLQXXyCxtLPqHgfQelEZsbYVTLqI4NgKvQ2IYtS43Qs'; // Встав свій Anon Key
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+console.log('REACT_APP_SUPABASE_URL:', process.env.REACT_APP_SUPABASE_URL);
+console.log(
+  'REACT_APP_SUPABASE_ANON_KEY:',
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+);
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error(
+    'Supabase URL and Anon Key must be provided in environment variables'
+  );
+}
+
+export const supabase = createClient(supabaseUrl, supabaseKey);

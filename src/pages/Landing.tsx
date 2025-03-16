@@ -21,11 +21,17 @@ export default function Landing() {
   const navigate = useNavigate();
 
   const handleSignUp = async () => {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`, // Динамічний редирект
+      },
+    });
     if (error) {
       setMessage(`Помилка реєстрації: ${error.message}`);
     } else {
-      setMessage('Перевірте ваш email для підтвердження!');
+      setMessage('Перевірте вашу пошту для підтвердження.');
     }
   };
 
@@ -37,7 +43,7 @@ export default function Landing() {
     if (error) {
       setMessage(`Помилка входу: ${error.message}`);
     } else {
-      navigate('/');
+      navigate('/'); // Відносний шлях, працює з поточним доменом
     }
   };
 
