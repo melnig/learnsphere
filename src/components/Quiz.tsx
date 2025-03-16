@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Додаємо useCallback
 import {
   Box,
   Typography,
@@ -31,7 +31,7 @@ export default function Quiz({ courseId, onComplete }: QuizProps) {
   const [finished, setFinished] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [error, setError] = useState<string | null>(null);
-  const [totalQuestions, setTotalQuestions] = useState(0); // Додаємо стан для загальної кількості питань
+  const [totalQuestions, setTotalQuestions] = useState(0);
 
   useEffect(() => {
     const fetchQuizData = async () => {
@@ -41,7 +41,6 @@ export default function Quiz({ courseId, onComplete }: QuizProps) {
         return;
       }
 
-      // Завантажуємо питання
       const { data: quizData, error: quizError } = await supabase
         .from('quizzes')
         .select('*')
@@ -54,9 +53,8 @@ export default function Quiz({ courseId, onComplete }: QuizProps) {
         ...q,
         options: q.options.options,
       }));
-      setTotalQuestions(allQuestions.length); // Зберігаємо загальну кількість питань
+      setTotalQuestions(allQuestions.length);
 
-      // Завантажуємо попередні відповіді
       const { data: answersData, error: answersError } = await supabase
         .from('quiz_answers')
         .select('question_id, is_correct')
@@ -82,15 +80,6 @@ export default function Quiz({ courseId, onComplete }: QuizProps) {
     fetchQuizData();
   }, [courseId]);
 
-  useEffect(() => {
-    if (timeLeft > 0 && !finished) {
-      const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-      return () => clearInterval(timer);
-    } else if (timeLeft === 0) {
-      handleAnswer();
-    }
-  }, [timeLeft, finished]);
-
   const updateProgress = async (currentScore: number) => {
     const { data: session } = await supabase.auth.getSession();
     if (session) {
@@ -103,7 +92,7 @@ export default function Quiz({ courseId, onComplete }: QuizProps) {
     }
   };
 
-  const handleAnswer = async () => {
+  const handleAnswer = useCallback(async () => {
     if (selectedAnswer === null) return;
 
     const isCorrect =
@@ -145,7 +134,24 @@ export default function Quiz({ courseId, onComplete }: QuizProps) {
       const finalScore = Math.round((newScore * 100) / totalQuestions);
       onComplete(finalScore);
     }
-  };
+  }, [
+    selectedAnswer,
+    questions,
+    currentQuestion,
+    score,
+    courseId,
+    totalQuestions,
+    onComplete,
+  ]); // Усі залежності handleAnswer
+
+  useEffect(() => {
+    if (timeLeft > 0 && !finished) {
+      const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+      return () => clearInterval(timer);
+    } else if (timeLeft === 0) {
+      handleAnswer();
+    }
+  }, [timeLeft, finished, handleAnswer]); // Додаємо handleAnswer
 
   if (questions.length === 0) {
     return (

@@ -8,8 +8,6 @@ import {
   CardContent,
   Button,
   Alert,
-  Link,
-  Divider,
 } from '@mui/material';
 import { supabase } from '../supabase-config';
 import Quiz from '../components/Quiz';
@@ -199,50 +197,6 @@ export default function Course() {
       setIsEnrolled(false);
       setProgress(0);
       setMessage('Ви скасували запис на курс.');
-      setTimeout(() => setMessage(null), 3000);
-    }
-  };
-
-  const handleCompleteLesson = async (lessonId: number) => {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session) {
-      setError('Увійдіть, щоб завершити урок.');
-      return;
-    }
-
-    const { error } = await supabase.from('user_lesson_progress').upsert({
-      user_id: session.session?.user.id,
-      lesson_id: lessonId,
-      completed: true,
-    });
-    if (error) {
-      setError(`Помилка завершення уроку: ${error.message}`);
-    } else {
-      const newCompletedLessons = [...completedLessons, lessonId];
-      setCompletedLessons(newCompletedLessons);
-      const lessonProgress =
-        lessons.length > 0 ? newCompletedLessons.length / lessons.length : 0;
-      const quizScore =
-        (
-          await supabase
-            .from('quiz_answers')
-            .select('id, is_correct')
-            .eq('user_id', session.session?.user.id)
-            .eq('course_id', id)
-        ).data?.filter((a) => a.is_correct).length || 0;
-      const totalQuestions =
-        (await supabase.from('quizzes').select('id').eq('course_id', id)).data
-          ?.length || 1;
-      const totalProgress = Math.round(
-        lessonProgress * 50 + (quizScore / totalQuestions) * 50
-      );
-      setProgress(totalProgress);
-      await supabase
-        .from('enrollments')
-        .update({ progress: totalProgress })
-        .eq('user_id', session.session?.user.id)
-        .eq('course_id', id);
-      setMessage('Урок виконано!');
       setTimeout(() => setMessage(null), 3000);
     }
   };
