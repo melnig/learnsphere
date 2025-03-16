@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase-config';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -14,6 +14,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation(); // Додаємо для перевірки поточного шляху
   const drawerWidth = 250;
 
   useEffect(() => {
@@ -21,8 +22,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/login');
+      if (!session && location.pathname !== '/login') {
+        navigate('/login', { state: { from: location.pathname } }); // Зберігаємо шлях для повернення
       }
       setLoading(false);
     };
@@ -32,8 +33,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       (event, session) => {
         if (event === 'SIGNED_OUT') {
           navigate('/login');
-        } else if (event === 'SIGNED_IN' && session) {
-          navigate('/');
+        } else if (
+          event === 'SIGNED_IN' &&
+          session &&
+          location.pathname === '/login'
+        ) {
+          navigate('/'); // Редирект на головну тільки з /login
         }
       }
     );
@@ -41,7 +46,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location]);
 
   if (loading) {
     return <Box>Loading...</Box>;

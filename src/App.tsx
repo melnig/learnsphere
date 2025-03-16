@@ -10,6 +10,8 @@ import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import ResetPassword from './pages/ResetPassword';
 import DashboardLayout from './components/DashboardLayout';
+import LessonEditor from './pages/LessonEditor';
+import LessonPage from './pages/LessonPage';
 
 function App() {
   return (
@@ -80,6 +82,11 @@ function App() {
               <Profile />
             </DashboardLayout>
           }
+        />
+        <Route path="/admin/lesson-editor" element={<LessonEditor />} />
+        <Route
+          path="/course/:courseId/lesson/:lessonId"
+          element={<LessonPage />}
         />
       </Routes>
     </BrowserRouter>
