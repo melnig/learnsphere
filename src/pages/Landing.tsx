@@ -43,7 +43,7 @@ export default function Landing() {
 
   const handleResetPassword = async () => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'http://localhost:3000/reset-password', // Сторінка для нового пароля
+      redirectTo: `${window.location.origin}/reset-password`, // Динамічний редирект
     });
     if (error) {
       setMessage(`Помилка скидання пароля: ${error.message}`);
