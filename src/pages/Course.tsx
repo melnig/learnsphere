@@ -12,7 +12,7 @@ import {
 import { supabase } from '../supabase-config';
 import Quiz from '../components/Quiz';
 
-interface Course {
+interface CourseData {
   id: number;
   title: string;
   description: string;
@@ -22,7 +22,7 @@ interface Course {
 
 export default function Course() {
   const { id } = useParams<{ id: string }>();
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] = useState<CourseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEnrolled, setIsEnrolled] = useState(false);

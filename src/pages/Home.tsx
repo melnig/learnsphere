@@ -7,7 +7,6 @@ import {
   CardContent,
   CardMedia,
   CardActionArea,
-  Breadcrumbs,
 } from '@mui/material';
 import { supabase } from '../supabase-config';
 import { Link } from 'react-router-dom';
