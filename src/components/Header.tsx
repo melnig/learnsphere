@@ -40,7 +40,7 @@ export default function Header({ onSidebarToggle }: HeaderProps) {
 
   return (
     <AppBar
-      position="static"
+      position="fixed"
       sx={{
         backgroundColor: '#1976d2',
         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',

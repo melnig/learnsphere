@@ -31,6 +31,7 @@ interface Lesson {
 
 export default function Course() {
   const { id } = useParams<{ id: string }>();
+  const courseId = Number(id);
   const [course, setCourse] = useState<CourseData | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,7 +141,7 @@ export default function Course() {
 
     const { error } = await supabase
       .from('enrollments')
-      .insert({ user_id: session.session?.user.id, course_id: id });
+      .insert({ user_id: session.session?.user.id, course_id: courseId });
     if (error) {
       setError(`Помилка запису: ${error.message}`);
     } else {
@@ -155,8 +156,8 @@ export default function Course() {
     const { data: session } = await supabase.auth.getSession();
     if (session) {
       const totalQuestions =
-        (await supabase.from('quizzes').select('id').eq('course_id', id)).data
-          ?.length || 1;
+        (await supabase.from('quizzes').select('id').eq('course_id', courseId))
+          .data?.length || 1;
       const quizScore = Math.round((newQuizProgress * totalQuestions) / 100);
       const lessonProgress =
         lessons.length > 0 ? completedLessons.length / lessons.length : 0;
@@ -168,7 +169,7 @@ export default function Course() {
         .from('enrollments')
         .update({ progress: totalProgress })
         .eq('user_id', session.session?.user.id)
-        .eq('course_id', id);
+        .eq('course_id', courseId);
       if (!error) {
         setProgress(totalProgress);
         setShowQuiz(false);
@@ -186,19 +187,55 @@ export default function Course() {
       return;
     }
 
-    const { error } = await supabase
+    const userId = session.session?.user.id;
+
+    // 1. Видаляємо запис із enrollments
+    const { error: unenrollError } = await supabase
       .from('enrollments')
       .delete()
-      .eq('user_id', session.session?.user.id)
-      .eq('course_id', id);
-    if (error) {
-      setError(`Помилка скасування: ${error.message}`);
-    } else {
-      setIsEnrolled(false);
-      setProgress(0);
-      setMessage('Ви скасували запис на курс.');
-      setTimeout(() => setMessage(null), 3000);
+      .eq('user_id', userId)
+      .eq('course_id', courseId);
+    if (unenrollError) {
+      setError(`Помилка скасування: ${unenrollError.message}`);
+      return;
     }
+
+    // 2. Видаляємо прогрес уроків
+    const { data: lessonsData } = await supabase
+      .from('lessons')
+      .select('id')
+      .eq('course_id', courseId);
+    const lessonIds = lessonsData?.map((lesson) => lesson.id) || [];
+    if (lessonIds.length > 0) {
+      const { error: progressError } = await supabase
+        .from('user_lesson_progress')
+        .delete()
+        .eq('user_id', userId)
+        .in('lesson_id', lessonIds);
+      if (progressError) {
+        setError(`Помилка видалення прогресу уроків: ${progressError.message}`);
+        return;
+      }
+    }
+
+    // 3. Видаляємо відповіді в квізах
+    const { error: quizError } = await supabase
+      .from('quiz_answers')
+      .delete()
+      .eq('user_id', userId)
+      .eq('course_id', courseId);
+    if (quizError) {
+      setError(`Помилка видалення відповідей квіза: ${quizError.message}`);
+      return;
+    }
+
+    // Оновлюємо стан
+    setIsEnrolled(false);
+    setProgress(0);
+    setCompletedLessons([]);
+    setHasIncompleteQuiz(false);
+    setMessage('Ви скасували запис на курс. Усі дані обнулено.');
+    setTimeout(() => setMessage(null), 3000);
   };
 
   if (loading) {
@@ -292,7 +329,7 @@ export default function Course() {
             </Alert>
           )}
           {showQuiz && isEnrolled && progress < 100 && (
-            <Quiz courseId={Number(id)} onComplete={handleQuizComplete} />
+            <Quiz courseId={courseId} onComplete={handleQuizComplete} />
           )}
         </CardContent>
       </Card>
@@ -304,7 +341,6 @@ export default function Course() {
           <Typography>Уроки відсутні.</Typography>
         ) : (
           lessons.map((lesson) => (
-            // У секції уроків:
             <Card key={lesson.id} sx={{ mb: 3, p: 2, boxShadow: 2 }}>
               <Typography variant="h6" sx={{ color: '#1976d2', mb: 1 }}>
                 {lesson.title}
