@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'; // Додаємо useCallback
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -80,17 +80,20 @@ export default function Quiz({ courseId, onComplete }: QuizProps) {
     fetchQuizData();
   }, [courseId]);
 
-  const updateProgress = async (currentScore: number) => {
-    const { data: session } = await supabase.auth.getSession();
-    if (session) {
-      const progress = Math.round((currentScore * 100) / totalQuestions);
-      await supabase
-        .from('enrollments')
-        .update({ progress })
-        .eq('user_id', session.session?.user.id)
-        .eq('course_id', courseId);
-    }
-  };
+  const updateProgress = useCallback(
+    async (currentScore: number) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (session) {
+        const progress = Math.round((currentScore * 100) / totalQuestions);
+        await supabase
+          .from('enrollments')
+          .update({ progress })
+          .eq('user_id', session.session?.user.id)
+          .eq('course_id', courseId);
+      }
+    },
+    [courseId, totalQuestions]
+  ); // Залежності updateProgress
 
   const handleAnswer = useCallback(async () => {
     if (selectedAnswer === null) return;
@@ -142,7 +145,8 @@ export default function Quiz({ courseId, onComplete }: QuizProps) {
     courseId,
     totalQuestions,
     onComplete,
-  ]); // Усі залежності handleAnswer
+    updateProgress, // Додаємо updateProgress
+  ]);
 
   useEffect(() => {
     if (timeLeft > 0 && !finished) {
@@ -151,7 +155,7 @@ export default function Quiz({ courseId, onComplete }: QuizProps) {
     } else if (timeLeft === 0) {
       handleAnswer();
     }
-  }, [timeLeft, finished, handleAnswer]); // Додаємо handleAnswer
+  }, [timeLeft, finished, handleAnswer]);
 
   if (questions.length === 0) {
     return (
