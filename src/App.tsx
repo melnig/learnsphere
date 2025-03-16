@@ -1,8 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Box } from '@mui/material';
-import { useState } from 'react';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
+import Landing from './pages/Landing';
 import Home from './pages/Home';
 import Course from './pages/Course';
 import MyLearning from './pages/MyLearning';
@@ -11,44 +8,80 @@ import Progress from './pages/Progress';
 import Courses from './pages/Courses';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
+import ResetPassword from './pages/ResetPassword';
+import DashboardLayout from './components/DashboardLayout';
 
 function App() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const drawerWidth = 250;
-
   return (
     <BrowserRouter>
-      <Box
-        sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}
-      >
-        <Header onSidebarToggle={() => setMobileOpen(!mobileOpen)} />
-        <Box sx={{ display: 'flex', flexGrow: 1 }}>
-          <Sidebar
-            mobileOpen={mobileOpen}
-            onClose={() => setMobileOpen(false)}
-            drawerWidth={drawerWidth}
-          />
-          <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              p: { xs: 2, sm: 4 },
-              width: { sm: `calc(100% - ${drawerWidth}px)` },
-            }}
-          >
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/course/:id" element={<Course />} />
-              <Route path="/my-learning" element={<MyLearning />} />
-              <Route path="/assessment" element={<Assessment />} />
-              <Route path="/progress" element={<Progress />} />
-              <Route path="/courses" element={<Courses />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/profile" element={<Profile />} />
-            </Routes>
-          </Box>
-        </Box>
-      </Box>
+      <Routes>
+        <Route path="/login" element={<Landing />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+          path="/"
+          element={
+            <DashboardLayout>
+              <Home />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/course/:id"
+          element={
+            <DashboardLayout>
+              <Course />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/my-learning"
+          element={
+            <DashboardLayout>
+              <MyLearning />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/assessment"
+          element={
+            <DashboardLayout>
+              <Assessment />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/progress"
+          element={
+            <DashboardLayout>
+              <Progress />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/courses"
+          element={
+            <DashboardLayout>
+              <Courses />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <DashboardLayout>
+              <Settings />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <DashboardLayout>
+              <Profile />
+            </DashboardLayout>
+          }
+        />
+      </Routes>
     </BrowserRouter>
   );
 }

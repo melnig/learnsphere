@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -5,17 +6,37 @@ import {
   IconButton,
   Box,
   Avatar,
+  Menu,
+  MenuItem,
 } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import SchoolIcon from '@mui/icons-material/School';
+import { supabase } from '../supabase-config';
 
 interface HeaderProps {
   onSidebarToggle: () => void;
 }
 
 export default function Header({ onSidebarToggle }: HeaderProps) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const navigate = useNavigate();
   const user = { avatarUrl: 'https://via.placeholder.com/40', name: 'Ihor' };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    handleMenuClose();
+    navigate('/login');
+  };
 
   return (
     <AppBar
@@ -36,28 +57,34 @@ export default function Header({ onSidebarToggle }: HeaderProps) {
             <MenuIcon />
           </IconButton>
           <SchoolIcon sx={{ mr: 1, fontSize: 32 }} />
-          <Typography
-            variant="h6"
-            component={Link}
-            to="/"
-            sx={{
-              fontWeight: 'bold',
-              letterSpacing: 1,
-              color: 'white',
-              textDecoration: 'none',
-            }}
-          >
-            LearnSphere
-          </Typography>
+          <Link to="/" style={{ textDecoration: 'none', color: 'white' }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 'bold', letterSpacing: 1 }}
+            >
+              LearnSphere
+            </Typography>
+          </Link>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Avatar
-            component={Link}
-            to="/profile"
             src={user.avatarUrl}
             alt={user.name}
             sx={{ width: 32, height: 32, cursor: 'pointer' }}
+            onClick={handleMenuOpen}
           />
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleMenuClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+            <MenuItem onClick={handleMenuClose} component={Link} to="/profile">
+              Профіль
+            </MenuItem>
+            <MenuItem onClick={handleSignOut}>Вийти</MenuItem>
+          </Menu>
         </Box>
       </Toolbar>
     </AppBar>

@@ -12,6 +12,8 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SchoolIcon from '@mui/icons-material/School';
 import PersonIcon from '@mui/icons-material/Person';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import { supabase } from '../supabase-config';
 
 interface SidebarProps {
   mobileOpen: boolean;
