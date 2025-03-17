@@ -8,21 +8,33 @@ import {
   CardContent,
   CircularProgress,
   Alert,
+  TextField,
+  Avatar,
 } from '@mui/material';
 import { supabase } from '../supabase-config';
 
 interface Enrollment {
   course_id: number;
   progress: number;
-  courses: { title: string }; // Об’єкт
+  courses: { title: string };
+}
+
+interface ProfileData {
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  bio?: string;
 }
 
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [profile, setProfile] = useState<ProfileData>({});
+  const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -35,6 +47,15 @@ export default function Profile() {
       }
       setUser(userData.user);
 
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, avatar_url, bio')
+        .eq('user_id', userData.user.id)
+        .single();
+      if (!profileError && profileData) {
+        setProfile(profileData);
+      }
+
       const { data: enrollData, error: enrollError } = (await supabase
         .from('enrollments')
         .select(
@@ -43,11 +64,10 @@ export default function Profile() {
         .eq('user_id', userData.user.id)) as {
         data: Enrollment[] | null;
         error: any;
-      }; // Явна типізація
+      };
       if (enrollError) {
         setError(`Помилка завантаження курсів: ${enrollError.message}`);
       } else {
-        console.log('Enrollments data:', enrollData);
         setEnrollments(enrollData || []);
       }
       setLoading(false);
@@ -58,6 +78,48 @@ export default function Profile() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/login');
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    let avatarUrl = profile.avatar_url;
+
+    // Завантаження аватара в Storage, якщо вибрано файл
+    if (avatarFile && user) {
+      const fileExt = avatarFile.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, avatarFile);
+      if (uploadError) {
+        setError(`Помилка завантаження аватара: ${uploadError.message}`);
+        return;
+      }
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+      avatarUrl = publicUrlData.publicUrl;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .upsert(
+        { user_id: user.id, ...profile, avatar_url: avatarUrl },
+        { onConflict: 'user_id' }
+      );
+    if (error) {
+      setError(`Помилка збереження профілю: ${error.message}`);
+    } else {
+      setProfile({ ...profile, avatar_url: avatarUrl });
+      setAvatarFile(null);
+      setEditMode(false);
+    }
   };
 
   if (loading) {
@@ -77,14 +139,90 @@ export default function Profile() {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 800, mx: 'auto' }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 800, mx: 'auto', mt: '64px' }}>
       <Typography variant="h4" sx={{ mb: 2, color: '#1976d2' }}>
         Профіль
       </Typography>
       <Card sx={{ mb: 3, p: 2 }}>
         <CardContent>
-          <Typography variant="h6">Користувач: {user?.email}</Typography>
-          <Typography>ID: {user?.id}</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Avatar
+              src={profile.avatar_url}
+              sx={{ width: 64, height: 64, mr: 2 }}
+            />
+            {editMode ? (
+              <Box sx={{ width: '100%', maxWidth: 400 }}>
+                <TextField
+                  label="Ім’я"
+                  value={profile.first_name || ''}
+                  onChange={(e) =>
+                    setProfile({ ...profile, first_name: e.target.value })
+                  }
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Прізвище"
+                  value={profile.last_name || ''}
+                  onChange={(e) =>
+                    setProfile({ ...profile, last_name: e.target.value })
+                  }
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <Box sx={{ mb: 2 }}>
+                  <Button variant="contained" component="label">
+                    Завантажити аватар
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                    />
+                  </Button>
+                  {avatarFile && (
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Вибрано: {avatarFile.name}
+                    </Typography>
+                  )}
+                </Box>
+                <TextField
+                  label="Біо"
+                  value={profile.bio || ''}
+                  onChange={(e) =>
+                    setProfile({ ...profile, bio: e.target.value })
+                  }
+                  fullWidth
+                  multiline
+                  rows={3}
+                  sx={{ mb: 2 }}
+                />
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button variant="contained" onClick={handleSaveProfile}>
+                    Зберегти
+                  </Button>
+                  <Button variant="outlined" onClick={() => setEditMode(false)}>
+                    Скасувати
+                  </Button>
+                </Box>
+              </Box>
+            ) : (
+              <Box>
+                <Typography variant="h6">
+                  {profile.first_name} {profile.last_name}
+                </Typography>
+                <Typography>Email: {user?.email}</Typography>
+                <Typography>Біо: {profile.bio || 'Немає опису'}</Typography>
+                <Button
+                  variant="contained"
+                  onClick={() => setEditMode(true)}
+                  sx={{ mt: 2 }}
+                >
+                  Редагувати
+                </Button>
+              </Box>
+            )}
+          </Box>
           <Button
             variant="contained"
             color="secondary"
