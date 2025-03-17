@@ -29,6 +29,8 @@ interface Lesson {
   video_url?: string;
 }
 
+// ... (інші імпорти та інтерфейси без змін)
+
 export default function Course() {
   const { id } = useParams<{ id: string }>();
   const courseId = Number(id);
@@ -48,7 +50,7 @@ export default function Course() {
       const { data: courseData, error: courseError } = await supabase
         .from('courses')
         .select('*')
-        .eq('id', id)
+        .eq('id', courseId)
         .single();
       if (courseError) {
         setError(`Помилка завантаження курсу: ${courseError.message}`);
@@ -61,7 +63,7 @@ export default function Course() {
       const { data: lessonsData, error: lessonsError } = await supabase
         .from('lessons')
         .select('*')
-        .eq('course_id', id)
+        .eq('course_id', courseId)
         .order('lesson_order', { ascending: true });
       if (lessonsError) {
         setError(`Помилка завантаження уроків: ${lessonsError.message}`);
@@ -70,59 +72,66 @@ export default function Course() {
       }
 
       const { data: session } = await supabase.auth.getSession();
-      if (session) {
+      if (session?.session?.user) {
+        const userId = session.session.user.id;
+
         const { data: enrollmentData, error: enrollmentError } = await supabase
           .from('enrollments')
           .select('id, progress')
-          .eq('user_id', session.session?.user.id)
-          .eq('course_id', id)
+          .eq('user_id', userId)
+          .eq('course_id', courseId)
           .single();
         if (!enrollmentError && enrollmentData) {
           setIsEnrolled(true);
-          setProgress(enrollmentData.progress || 0);
 
-          const { data: quizData } = await supabase
-            .from('quizzes')
-            .select('id')
-            .eq('course_id', id);
-          const totalQuestions = quizData?.length || 0;
-          const { data: answersData } = await supabase
-            .from('quiz_answers')
-            .select('id, is_correct')
-            .eq('user_id', session.session?.user.id)
-            .eq('course_id', id);
-          const answeredQuestions = answersData?.length || 0;
-          const quizScore =
-            answersData?.filter((a) => a.is_correct).length || 0;
-          setHasIncompleteQuiz(
-            answeredQuestions > 0 && answeredQuestions < totalQuestions
-          );
-
+          // Завантажуємо прогрес уроків
+          const lessonIds = lessonsData?.map((lesson) => lesson.id) || [];
           const { data: lessonProgressData } = await supabase
             .from('user_lesson_progress')
             .select('lesson_id')
-            .eq('user_id', session.session?.user.id)
-            .eq('completed', true);
-          setCompletedLessons(
-            lessonProgressData?.map((lp) => lp.lesson_id) || []
+            .eq('user_id', userId)
+            .eq('completed', true)
+            .in('lesson_id', lessonIds);
+          const completed = lessonProgressData?.map((lp) => lp.lesson_id) || [];
+          setCompletedLessons(completed);
+
+          // Завантажуємо прогрес квіза
+          const { data: quizData } = await supabase
+            .from('quizzes')
+            .select('id')
+            .eq('course_id', courseId);
+          const totalQuestions = quizData?.length || 0;
+
+          const { data: answersData } = await supabase
+            .from('quiz_answers')
+            .select('is_correct')
+            .eq('user_id', userId)
+            .eq('course_id', courseId);
+          const quizScore =
+            answersData?.filter((a) => a.is_correct).length || 0;
+          setHasIncompleteQuiz(
+            (answersData?.length || 0) > 0 &&
+              (answersData?.length || 0) < totalQuestions
           );
 
-          const lessonProgress =
-            lessonsData && lessonsData.length > 0
-              ? (lessonProgressData?.length || 0) / lessonsData.length
-              : 0;
+          // Розрахунок прогресу
+          const lessonProgress = lessonsData?.length
+            ? completed.length / lessonsData.length
+            : 0;
           const quizProgress =
             totalQuestions > 0 ? quizScore / totalQuestions : 0;
           const totalProgress = Math.round(
             lessonProgress * 50 + quizProgress * 50
           );
+
           setProgress(totalProgress);
-          if (enrollmentData && enrollmentData.progress !== totalProgress) {
+
+          if (enrollmentData.progress !== totalProgress) {
             await supabase
               .from('enrollments')
               .update({ progress: totalProgress })
-              .eq('user_id', session.session?.user.id)
-              .eq('course_id', id);
+              .eq('user_id', userId)
+              .eq('course_id', courseId);
           }
         }
       }
@@ -130,18 +139,33 @@ export default function Course() {
       setLoading(false);
     };
     fetchCourseAndEnrollment();
-  }, [id]);
+  }, [courseId]);
 
   const handleEnroll = async () => {
     const { data: session } = await supabase.auth.getSession();
-    if (!session) {
+    if (!session?.session?.user) {
       setError('Увійдіть, щоб записатися на курс.');
+      return;
+    }
+    const userId = session.session.user.id;
+
+    // Перевірка, чи вже записаний
+    const { data: existingEnrollment } = await supabase
+      .from('enrollments')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('course_id', courseId)
+      .single();
+    if (existingEnrollment) {
+      setMessage('Ви вже записані на цей курс!');
+      setIsEnrolled(true);
+      setTimeout(() => setMessage(null), 3000);
       return;
     }
 
     const { error } = await supabase
       .from('enrollments')
-      .insert({ user_id: session.session?.user.id, course_id: courseId });
+      .insert({ user_id: userId, course_id: courseId });
     if (error) {
       setError(`Помилка запису: ${error.message}`);
     } else {
@@ -154,11 +178,16 @@ export default function Course() {
 
   const handleQuizComplete = async (newQuizProgress: number) => {
     const { data: session } = await supabase.auth.getSession();
-    if (session) {
-      const totalQuestions =
-        (await supabase.from('quizzes').select('id').eq('course_id', courseId))
-          .data?.length || 1;
+    if (session?.session?.user) {
+      const userId = session.session.user.id;
+
+      const { data: quizData } = await supabase
+        .from('quizzes')
+        .select('id')
+        .eq('course_id', courseId);
+      const totalQuestions = quizData?.length || 1;
       const quizScore = Math.round((newQuizProgress * totalQuestions) / 100);
+
       const lessonProgress =
         lessons.length > 0 ? completedLessons.length / lessons.length : 0;
       const totalProgress = Math.round(
@@ -168,7 +197,7 @@ export default function Course() {
       const { error } = await supabase
         .from('enrollments')
         .update({ progress: totalProgress })
-        .eq('user_id', session.session?.user.id)
+        .eq('user_id', userId)
         .eq('course_id', courseId);
       if (!error) {
         setProgress(totalProgress);
@@ -182,14 +211,13 @@ export default function Course() {
 
   const handleUnenroll = async () => {
     const { data: session } = await supabase.auth.getSession();
-    if (!session) {
+    if (!session?.session?.user) {
       setError('Увійдіть, щоб скасувати запис.');
       return;
     }
 
-    const userId = session.session?.user.id;
+    const userId = session.session.user.id;
 
-    // 1. Видаляємо запис із enrollments
     const { error: unenrollError } = await supabase
       .from('enrollments')
       .delete()
@@ -200,7 +228,6 @@ export default function Course() {
       return;
     }
 
-    // 2. Видаляємо прогрес уроків
     const { data: lessonsData } = await supabase
       .from('lessons')
       .select('id')
@@ -218,7 +245,6 @@ export default function Course() {
       }
     }
 
-    // 3. Видаляємо відповіді в квізах
     const { error: quizError } = await supabase
       .from('quiz_answers')
       .delete()
@@ -229,7 +255,6 @@ export default function Course() {
       return;
     }
 
-    // Оновлюємо стан
     setIsEnrolled(false);
     setProgress(0);
     setCompletedLessons([]);
@@ -251,7 +276,7 @@ export default function Course() {
   }
 
   return (
-    <Box sx={{ p: 4 }}>
+    <Box sx={{ p: 4, mt: '64px' }}>
       <Card sx={{ maxWidth: 800, mx: 'auto', boxShadow: 3 }}>
         <CardMedia
           component="img"
@@ -277,7 +302,7 @@ export default function Course() {
           {isEnrolled && (
             <>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Прогрес: {progress}%
+                Загальний прогрес (уроки + тест): {progress}%
               </Typography>
               {progress === 100 ? (
                 <Button
@@ -348,7 +373,7 @@ export default function Course() {
               <Button
                 variant="outlined"
                 color="primary"
-                href={`/course/${id}/lesson/${lesson.id}`}
+                href={`/course/${courseId}/lesson/${lesson.id}`}
                 sx={{ mt: 1 }}
               >
                 Детальніше
