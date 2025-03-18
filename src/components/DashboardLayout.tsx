@@ -5,6 +5,7 @@ import { supabase } from '../supabase-config';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import DynamicBreadcrumbs from './DynamicBreadcrumbs';
+import Footer from './Footer';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const location = useLocation(); // Додаємо для перевірки поточного шляху
+  const location = useLocation();
   const drawerWidth = 250;
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session && location.pathname !== '/login') {
-        navigate('/login', { state: { from: location.pathname } }); // Зберігаємо шлях для повернення
+        navigate('/login', { state: { from: location.pathname } });
       }
       setLoading(false);
     };
@@ -38,7 +39,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           session &&
           location.pathname === '/login'
         ) {
-          navigate('/'); // Редирект на головну тільки з /login
+          navigate('/');
         }
       }
     );
@@ -68,11 +69,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             mt: '64px',
             p: { xs: 2, sm: 4 },
             width: { sm: `calc(100% - ${drawerWidth}px)` },
+            minHeight: 'calc(100vh - 64px)',
+            pb: 4, // Додаємо відступ знизу, щоб футер не перекривав контент
           }}
         >
           <DynamicBreadcrumbs />
           {children}
         </Box>
+      </Box>
+      {/* Футер на всю ширину з fixed позиціонуванням */}
+      <Box
+        sx={{
+          width: '100%',
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0, // Розтягуємо до правого краю
+          zIndex: 1210,
+          backgroundColor: '#1976d2',
+          textAlign: 'center', // Забезпечуємо, що колір не зміщується
+        }}
+      >
+        <Footer />
       </Box>
     </Box>
   );

@@ -53,7 +53,7 @@ export default function Courses() {
       </Typography>
       <Grid container spacing={3}>
         {courses.map((course) => (
-          <Grid item xs={12} sm={6} md={4} key={course.id}>
+          <Grid item xs={12} sm={12} md={6} lg={4} key={course.id}>
             <Card
               sx={{
                 height: '100%',

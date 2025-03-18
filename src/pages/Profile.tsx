@@ -90,7 +90,6 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     let avatarUrl = profile.avatar_url;
 
-    // Завантаження аватара в Storage, якщо вибрано файл
     if (avatarFile && user) {
       const fileExt = avatarFile.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
@@ -139,17 +138,31 @@ export default function Profile() {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
+    <Box
+      sx={{
+        p: { xs: 2, md: 4 },
+        maxWidth: 1200,
+        mx: 'auto',
+        width: '100%', // Обмежуємо ширину до контейнера
+        overflowX: 'hidden', // Запобігаємо горизонтальному скролу
+        mt: '56px', // Відступ для фіксованого хедера
+      }}
+    >
       <Typography variant="h4" sx={{ mb: 2, color: '#1976d2' }}>
         Профіль
       </Typography>
       <Card sx={{ mb: 3, p: 2 }}>
         <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Avatar
-              src={profile.avatar_url}
-              sx={{ width: 64, height: 64, mr: 2 }}
-            />
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' }, // Колонка на xs, рядок на sm+
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              mb: 2,
+              gap: 2,
+            }}
+          >
+            <Avatar src={profile.avatar_url} sx={{ width: 64, height: 64 }} />
             {editMode ? (
               <Box sx={{ width: '100%', maxWidth: 400 }}>
                 <TextField
