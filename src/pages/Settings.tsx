@@ -157,7 +157,7 @@ export default function Settings() {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 800, mx: 'auto', mt: '64px' }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
       <Typography variant="h4" sx={{ mb: 2, color: '#1976d2' }}>
         Налаштування
       </Typography>

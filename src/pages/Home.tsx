@@ -90,10 +90,7 @@ export default function Home() {
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
       {/* Герой-секція */}
       <Box sx={{ mb: 6, textAlign: 'center' }}>
-        <Typography
-          variant="h3"
-          sx={{ fontWeight: 'bold', color: '#1976d2', mb: 2 }}
-        >
+        <Typography variant="h3" sx={{ color: '#1976d2', mb: 2 }}>
           {userName
             ? `Вітаємо, ${userName}!`
             : 'Ласкаво просимо до LearnSphere!'}

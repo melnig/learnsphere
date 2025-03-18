@@ -48,11 +48,7 @@ export default function Courses() {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Typography
-        variant="h4"
-        gutterBottom
-        sx={{ fontWeight: 'bold', color: '#1976d2' }}
-      >
+      <Typography variant="h4" gutterBottom sx={{ color: '#1976d2' }}>
         Доступні курси
       </Typography>
       <Grid container spacing={3}>

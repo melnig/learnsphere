@@ -57,19 +57,27 @@ export default function MyLearning() {
   }, []);
 
   if (loading) {
-    return <Typography>Завантаження...</Typography>;
+    return (
+      <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto', mt: '64px' }}>
+        <Typography>Завантаження...</Typography>
+      </Box>
+    );
   }
 
   if (error) {
-    return <Typography color="error">{error}</Typography>;
+    return (
+      <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
   }
 
   return (
-    <Box sx={{ p: 4 }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
       <Typography
         variant="h4"
         gutterBottom
-        sx={{ fontWeight: 'bold', color: '#1976d2' }}
+        sx={{ fontWeight: 'regular', color: '#1976d2', mb: 4 }}
       >
         Моє навчання
       </Typography>
@@ -83,6 +91,7 @@ export default function MyLearning() {
                 flexDirection: 'column',
                 boxShadow: 3,
                 '&:hover': { boxShadow: 6 },
+                mb: 3,
               }}
             >
               <CardActionArea

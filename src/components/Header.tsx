@@ -135,8 +135,17 @@ export default function Header({ onSidebarToggle }: HeaderProps) {
           </Link>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {/* Інпут пошуку — ховаємо на xs */}
+
+          {/* Ім’я користувача — ховаємо на xs */}
           {userData && (
-            <Typography sx={{ color: 'white', mr: 2 }}>
+            <Typography
+              sx={{
+                display: { xs: 'none', sm: 'block' }, // Ховаємо на xs
+                color: 'white',
+                mr: 2,
+              }}
+            >
               {userData.firstName} {userData.lastName}
             </Typography>
           )}
@@ -148,14 +157,20 @@ export default function Header({ onSidebarToggle }: HeaderProps) {
           />
           <TextField
             variant="outlined"
-            size="small"
-            placeholder="Пошук..."
+            placeholder="Пошук курсів..."
             value={searchQuery}
             onChange={handleSearchChange}
+            size="small"
             sx={{
+              display: { xs: 'none', sm: 'block' }, // Ховаємо на xs
+              mr: 2,
               backgroundColor: 'white',
               borderRadius: 1,
-              '& .MuiInputBase-input': { padding: '6px 12px' },
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { border: 'none' },
+                '&:hover fieldset': { border: 'none' },
+                '&.Mui-focused fieldset': { border: 'none' },
+              },
             }}
           />
           <Menu
