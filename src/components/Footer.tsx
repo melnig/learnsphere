@@ -1,5 +1,4 @@
 import { Box, Typography, Link } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
 
 export default function Footer() {
   return (
@@ -16,10 +15,6 @@ export default function Footer() {
       }}
     >
       <Box>
-        {/* Лінки */}
-        <Box sx={{ mb: { xs: 2, sm: 0 } }}></Box>
-
-        {/* Копірайт */}
         <Typography variant="body2">
           © {new Date().getFullYear()} LearnSphere. Усі права захищено.
         </Typography>
