@@ -47,7 +47,15 @@ export default function Courses() {
   }
 
   return (
-    <Box sx={{ p: 4 }}>
+    <Box
+      sx={{
+        p: { xs: 2, md: 4 },
+        maxWidth: 1200,
+        mx: 'auto',
+        width: '100%',
+        overflowX: 'hidden',
+      }}
+    >
       <Typography variant="h4" gutterBottom sx={{ color: '#1976d2' }}>
         Доступні курси
       </Typography>

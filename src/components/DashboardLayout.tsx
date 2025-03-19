@@ -17,6 +17,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const drawerWidth = 250;
+  const headerHeight = 64; // Висота хедера
+  const footerHeight = 56; // Висота футера (налаштуй, якщо потрібно)
 
   useEffect(() => {
     const checkSession = async () => {
@@ -66,28 +68,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           component="main"
           sx={{
             flexGrow: 1,
-            mt: '64px',
             p: { xs: 2, sm: 4 },
             width: { sm: `calc(100% - ${drawerWidth}px)` },
-            minHeight: 'calc(100vh - 64px)',
-            pb: 4, // Додаємо відступ знизу, щоб футер не перекривав контент
+            minHeight: `calc(100vh - ${headerHeight}px - ${footerHeight}px)`, // Висота контенту
           }}
         >
           <DynamicBreadcrumbs />
           {children}
         </Box>
       </Box>
-      {/* Футер на всю ширину з fixed позиціонуванням */}
+      {/* Футер у потоці */}
       <Box
         sx={{
           width: '100%',
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0, // Розтягуємо до правого краю
-          zIndex: 1210,
-          backgroundColor: '#1976d2',
-          textAlign: 'center', // Забезпечуємо, що колір не зміщується
+          mt: 'auto', // Притискаємо донизу
+          zIndex: 1200, // Піднімаємо над боковим меню
         }}
       >
         <Footer />

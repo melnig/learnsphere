@@ -16,6 +16,7 @@ import ResetPassword from './pages/ResetPassword';
 import DashboardLayout from './components/DashboardLayout';
 import LessonEditor from './pages/LessonEditor';
 import LessonPage from './pages/LessonPage';
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
@@ -143,6 +144,7 @@ function App() {
             path="/course/:courseId/lesson/:lessonId"
             element={<LessonPage />}
           />
+          <Route path="/admin" element={<AdminPanel />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

@@ -145,7 +145,6 @@ export default function Profile() {
         mx: 'auto',
         width: '100%', // Обмежуємо ширину до контейнера
         overflowX: 'hidden', // Запобігаємо горизонтальному скролу
-        mt: '56px', // Відступ для фіксованого хедера
       }}
     >
       <Typography variant="h4" sx={{ mb: 2, color: '#1976d2' }}>

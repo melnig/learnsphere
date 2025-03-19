@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '../supabase-config';
 import {
   Drawer,
   List,
@@ -12,6 +14,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SchoolIcon from '@mui/icons-material/School';
 import PersonIcon from '@mui/icons-material/Person';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -24,6 +27,24 @@ export default function Sidebar({
   onClose,
   drawerWidth,
 }: SidebarProps) {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', userData.user.id)
+          .single();
+        if (profileData?.role === 'admin') {
+          setIsAdmin(true);
+        }
+      }
+    };
+    checkAdminRole();
+  }, []);
   const sidebarItems = [
     { text: 'Моє навчання', icon: <MenuBookIcon />, path: '/my-learning' },
     { text: 'Оцінювання', icon: <AssessmentIcon />, path: '/assessment' },
@@ -31,6 +52,15 @@ export default function Sidebar({
     { text: 'Курси', icon: <SchoolIcon />, path: '/courses' },
     { text: 'Налаштування', icon: <SettingsIcon />, path: '/settings' },
     { text: 'Профіль', icon: <PersonIcon />, path: '/profile' },
+    ...(isAdmin
+      ? [
+          {
+            text: 'Адмін-панель',
+            icon: <AdminPanelSettingsIcon />,
+            path: '/admin',
+          },
+        ]
+      : []),
   ];
 
   const drawer = (
@@ -60,7 +90,9 @@ export default function Sidebar({
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
-            mt: '64px',
+            mt: '64px', // Відступ для хедера
+            height: 'calc(100vh - 64px - 56px)', // Обмежуємо висоту (хедер + футер)
+            overflowY: 'auto', // Додаємо прокрутку
             borderRight: '1px solid rgba(0, 0, 0, 0.12)',
           },
         }}
@@ -76,6 +108,9 @@ export default function Sidebar({
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
+            mt: '56px',
+            height: 'calc(100vh - 64px )',
+            overflowY: 'auto',
           },
         }}
       >
